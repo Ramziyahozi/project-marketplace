@@ -40,7 +40,8 @@ exports.getProducts = async (req, res) => {
       filter.expiredDate = { $gt: new Date() };
     }
 
-    const products = await Product.find(filter).populate('sellerId', 'name address category');
+
+    const products = await Product.find(filter).populate('sellerId', 'name store');
     res.json(products);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -88,8 +89,9 @@ exports.createProduct = async (req, res) => {
 // GET product by id
 exports.getProductById = async (req, res) => {
   try {
+    // Perbaiki populate agar field store ikut dikirim
     const product = await Product.findById(req.params.id)
-      .populate('sellerId', 'name address category')
+      .populate('sellerId', 'name store')
       .populate('reviews.user', 'name'); // Tambahkan populate ini
     if (!product) return res.status(404).json({ error: 'Product not found' });
     res.json(product);
