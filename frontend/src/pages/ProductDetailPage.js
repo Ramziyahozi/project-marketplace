@@ -44,18 +44,27 @@ const ProductDetailPage = () => {
       navigate('/login');
       return;
     }
+    // Cek jika user adalah seller dari produk ini
+    if (user && product && product.sellerId && user._id === (product.sellerId._id || product.sellerId)) {
+      alert('Anda tidak bisa membeli produk milik toko Anda sendiri!');
+      return;
+    }
     const itemToAdd = {
       ...product,
       quantity: quantity
     };
     addItem(itemToAdd, quantity);
-    // Produk berhasil ditambahkan ke keranjang
     alert(`${product.name} ditambahkan ke keranjang!`);
   };
 
   const handleBuyNow = () => {
     if (!isAuthenticated) {
       navigate('/login');
+      return;
+    }
+    // Cek jika user adalah seller dari produk ini
+    if (user && product && product.sellerId && user._id === (product.sellerId._id || product.sellerId)) {
+      alert('Anda tidak bisa membeli produk milik toko Anda sendiri!');
       return;
     }
     const itemToAdd = {
@@ -157,9 +166,7 @@ const ProductDetailPage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-green-100 text-gray-900">
       <div className="container mx-auto px-2 py-8 max-w-5xl">
-        {/* HERO PRODUK + INFO GABUNGAN */}
         <div className="flex flex-col md:flex-row gap-6 md:gap-10 mb-6 md:items-start animate-fade-in">
-          {/* Gambar utama */}
           <div className="flex-1 flex flex-col items-center md:items-start">
             <div className="relative w-full max-w-lg rounded-3xl overflow-hidden shadow-2xl border-4 border-green-100 bg-white group">
               <img 
@@ -168,18 +175,15 @@ const ProductDetailPage = () => {
                 className="w-full h-[340px] object-cover object-center transition-transform duration-500 group-hover:scale-105"
                 style={{ aspectRatio: '1/1' }}
               />
-              {/* Badge Diskon */}
               {product.discountPrice && (
                 <span className="absolute top-4 left-4 bg-gradient-to-r from-red-500 to-yellow-400 text-white text-lg font-bold px-5 py-2 rounded-full shadow-lg animate-pulse">
                   -{getDiscountPercentage()}%
                 </span>
               )}
-              {/* Badge Kategori */}
               <span className="absolute top-4 right-4 bg-green-100 text-green-700 text-xs font-bold px-4 py-1 rounded-full shadow">
                 {product.category?.replace('-', ' ').toUpperCase() || 'PRODUK'}
               </span>
             </div>
-            {/* Thumbnail Images */}
             {product.images && product.images.length > 1 && (
               <div className="flex gap-2 mt-4">
                 {product.images.map((img, idx) => (
@@ -193,7 +197,6 @@ const ProductDetailPage = () => {
                 ))}
               </div>
             )}
-            {/* Card Aksi Pembelian */}
             <div className="w-full mt-4 animate-fade-in">
               <div className="bg-white rounded-3xl shadow-2xl border-2 border-green-100 p-6 flex flex-col gap-4">
                                 <div className="flex items-center justify-between mb-2">
@@ -248,7 +251,6 @@ const ProductDetailPage = () => {
                 </button>
               </div>
             </div>
-            {/* Info Penjual & Lokasi Toko */}
             <div className="w-full mt-4 animate-fade-in">
               <div className="bg-white rounded-3xl shadow-2xl border-2 border-green-100 p-6 md:p-8 flex flex-col gap-4">
                 <h3 className="text-lg font-bold text-green-700 mb-2 flex items-center gap-2">
@@ -258,7 +260,6 @@ const ProductDetailPage = () => {
                 <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-6">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
-                      {/* Foto toko bulat jika ada, fallback ke icon toko */}
                       {product.sellerId?.photo ? (
                         <img
                           src={product.sellerId.photo}
@@ -279,7 +280,6 @@ const ProductDetailPage = () => {
                         <span className="text-gray-700">-</span>
                       )}
                     </div>
-                    {/* Alamat dan Lihat di Peta, lebih simetris */}
                     <div className="flex flex-col gap-1 mb-2">
                       <div className="flex items-center gap-2">
                         <svg className="w-5 h-5 text-blue-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 12.414a2 2 0 00-2.828 0l-4.243 4.243m6.364-6.364A4 4 0 1112 20a4 4 0 010-8z" /></svg>
@@ -303,10 +303,8 @@ const ProductDetailPage = () => {
               </div>
             </div>
           </div>
-          {/* CARD BESAR: Info produk + deskripsi + nutrisi + info tambahan */}
           <div className="flex-1">
             <div className="bg-white rounded-3xl shadow-2xl border-2 border-green-100 p-6 md:p-8 flex flex-col gap-4">
-              {/* Nama, harga, rating, stok, expired */}
               <div className="flex flex-col md:flex-row md:items-end gap-2 md:gap-6">
                 <div className="flex-1">
                   <h1 className="text-2xl md:text-3xl font-extrabold text-green-800 mb-1 flex items-center gap-2">
@@ -343,7 +341,6 @@ const ProductDetailPage = () => {
                   )}
                 </div>
               </div>
-              {/* Deskripsi */}
               <div className="text-gray-800 leading-relaxed text-base md:text-lg tracking-wide whitespace-pre-line break-words">
                 <h3 className="text-lg font-bold text-green-700 mb-1">Deskripsi</h3>
                 {showFullDescription || !product.description || product.description.length < 300
@@ -355,9 +352,6 @@ const ProductDetailPage = () => {
                     </>
                   )}
               </div>
-              {/* Nutrisi & Bahan */}
-              {/* Bagian Waktu Produksi dan Informasi Nutrisi dihapus */}
-              {/* Info Tambahan */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
                 <div>
                   <h4 className="font-semibold text-green-700 mb-1">Status Makanan</h4>
@@ -377,17 +371,14 @@ const ProductDetailPage = () => {
                 </div>
               </div>
             </div>
-            {/* EDUKASI FOODWASTE */}
             <div className="w-full mt-4 animate-fade-in">
               <div className="relative flex flex-col md:flex-row items-center gap-6 p-6 rounded-3xl shadow-2xl border-2 border-green-200 bg-gradient-to-br from-green-50 via-white to-yellow-50 overflow-hidden">
-                {/* Icon/Ilustrasi */}
                 <div className="flex-shrink-0 flex flex-col items-center justify-center">
                   <div className="w-20 h-20 md:w-28 md:h-28 rounded-full bg-gradient-to-br from-green-400 to-yellow-300 flex items-center justify-center shadow-lg mb-2">
                     <svg className="w-12 h-12 md:w-16 md:h-16 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                   </div>
                   <span className="text-xs text-green-700 font-semibold mt-1">#FoodRescue</span>
                 </div>
-                {/* Edukasi & Motivasi */}
                 <div className="flex-1 flex flex-col gap-3">
                   <div className="inline-flex items-center gap-2 px-4 py-3 rounded-xl bg-white/80 border border-yellow-200 text-yellow-800 font-semibold text-base shadow animate-slide-in-up">
                     <svg className="w-6 h-6 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
@@ -406,7 +397,6 @@ const ProductDetailPage = () => {
             </div>
           </div>
         </div>
-        {/* ULASAN PEMBELI */}
         <div className="mb-6 animate-fade-in">
           <div className="bg-green-50/80 backdrop-blur-xl rounded-3xl p-8 border border-green-200 shadow-xl">
             <h3 className="text-2xl font-bold text-green-700 mb-8 flex items-center gap-2">
@@ -416,7 +406,6 @@ const ProductDetailPage = () => {
               Ulasan Pembeli
               <span className="ml-2 bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full text-sm font-semibold">{product.reviews?.length || 0} ulasan</span>
             </h3>
-            {/* Form Ulasan */}
             <form onSubmit={handleReviewSubmit} className="mb-10 bg-green-100/70 rounded-2xl p-6 flex flex-col md:flex-row gap-4 items-center border border-green-200 shadow">
               <div className="flex items-center gap-2">
                 <span className="text-green-700 font-semibold">Rating:</span>
