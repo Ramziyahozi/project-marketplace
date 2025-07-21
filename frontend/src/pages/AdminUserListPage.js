@@ -25,7 +25,6 @@ const AdminUserListPage = () => {
     }
     fetchUsers();
     fetchPendingOrders();
-    // eslint-disable-next-line
   }, [isAuthenticated, user]);
 
   const fetchUsers = async () => {
@@ -46,7 +45,6 @@ const AdminUserListPage = () => {
       const res = await api.get('/orders?status=processing_payment');
       setPendingOrders(res.data);
     } catch (err) {
-      // bisa tambahkan error handling jika perlu
     }
   };
 
@@ -112,7 +110,7 @@ const AdminUserListPage = () => {
     }
   };
 
-  // ACC user jadi penjual
+
   const handleAccSeller = async (u) => {
     if (!window.confirm('ACC user ini menjadi penjual?')) return;
     try {
@@ -139,9 +137,6 @@ const AdminUserListPage = () => {
       setUsers(users.map(x => x._id === u._id ? res.data : x));
       setSuccess('Toko berhasil di-ACC');
       
-      // Tambahkan notifikasi untuk user yang toko-nya di-ACC
-      // Note: Dalam implementasi nyata, ini akan dikirim via WebSocket atau polling
-      // Untuk demo, kita simpan di localStorage sebagai fallback
       const userNotifications = JSON.parse(localStorage.getItem('userNotifications') || '{}');
       if (!userNotifications[u._id]) {
         userNotifications[u._id] = [];
@@ -156,7 +151,6 @@ const AdminUserListPage = () => {
       });
       localStorage.setItem('userNotifications', JSON.stringify(userNotifications));
       
-      // Tampilkan notifikasi sukses untuk admin
       setSuccess(`Toko "${u.store.name}" berhasil di-ACC! User akan mendapat notifikasi.`);
       
     } catch (err) {
@@ -187,7 +181,7 @@ const AdminUserListPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-green-900 flex flex-col items-center py-8 px-2">
-      {/* Header Dashboard */}
+      {/* Dashboard */}
       <header className="w-full max-w-5xl mb-10">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-white/95 rounded-2xl shadow-lg p-6 border-b-4 border-green-400">
           <div className="flex items-center gap-4">
@@ -201,45 +195,7 @@ const AdminUserListPage = () => {
           </div>
         </div>
       </header>
-      {/* Section Verifikasi Pembayaran */}
-      <section className="w-full max-w-5xl mb-10">
-        <div className="bg-gradient-to-r from-red-100 via-yellow-50 to-green-50 rounded-2xl shadow-lg p-6 border-2 border-red-300">
-          <div className="flex items-center mb-6">
-            <svg className="w-8 h-8 text-red-600 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6 0A9 9 0 11 3 12a9 9 0 0118 0z" /></svg>
-            <h2 className="text-2xl font-bold text-red-700">Verifikasi Pembayaran</h2>
-          </div>
-          {pendingOrders.length === 0 ? (
-            <div className="text-center text-gray-500 py-8 text-lg">Tidak ada pesanan yang perlu diverifikasi.</div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {pendingOrders.map(order => (
-                <div key={order._id} className="bg-white border-2 border-green-200 rounded-xl shadow-md p-5 flex flex-col gap-2 hover:shadow-xl transition">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="font-bold text-green-700 text-lg">{order.buyerId?.name || '-'}</span>
-                    <span className="ml-auto px-2 py-1 bg-yellow-100 text-yellow-700 text-xs rounded-full font-semibold">{order.status === 'processing_payment' ? 'Sedang Diproses' : order.status}</span>
-                  </div>
-                  <div className="text-gray-700 text-sm"><span className="font-semibold">Kontak:</span> {order.buyerId?.phone || '-'}</div>
-                  <div className="text-gray-700 text-sm"><span className="font-semibold">Produk:</span> {order.productId?.name || '-'}</div>
-                  <div className="text-gray-700 text-sm"><span className="font-semibold">Jumlah:</span> {order.quantity}</div>
-                  <div className="text-gray-700 text-sm"><span className="font-semibold">Harga:</span> Rp{order.productId?.discountPrice?.toLocaleString() || order.productId?.price?.toLocaleString() || '-'}</div>
-                  <div className="text-gray-700 text-sm"><span className="font-semibold">Metode Pembayaran:</span> {order.paymentMethod}</div>
-                  <div className="text-gray-700 text-sm"><span className="font-semibold">Alamat:</span> {order.deliveryAddress || '-'}</div>
-                  <div className="text-gray-700 text-sm"><span className="font-semibold">Pickup Time:</span> {order.pickupTime || '-'}</div>
-                  <div className="text-gray-700 text-sm"><span className="font-semibold">Catatan:</span> {order.notes || '-'}</div>
-                  <button onClick={() => handleConfirmOrder(order._id)} className="mt-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-semibold px-4 py-2 rounded shadow">
-                    <svg className="w-5 h-5 inline-block mr-1 -mt-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-                    Konfirmasi Pembayaran
-                  </button>
-                  <button onClick={() => handleRejectOrder(order._id)} className="mt-2 bg-red-500 hover:bg-red-600 text-white font-semibold px-4 py-2 rounded shadow ml-2">
-                    Tolak Pembayaran
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </section>
-      {/* Section Manajemen User */}
+      {/* Manajemen User */}
       <section className="w-full max-w-5xl bg-white/95 rounded-2xl shadow-lg p-8">
         <div className="flex items-center mb-6">
           <svg className="w-7 h-7 mr-2 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m9-4a4 4 0 10-8 0 4 4 0 008 0zm6 4v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5a2 2 0 012-2h12a2 2 0 012 2z" /></svg>
@@ -309,7 +265,6 @@ const AdminUserListPage = () => {
           </div>
         )}
       </section>
-      {/* Modal Edit User */}
       {editUser && (
         <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
@@ -345,13 +300,11 @@ const AdminUserListPage = () => {
           </div>
         </div>
       )}
-      {/* Modal Detail User */}
       {detailUser && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
           <div className="bg-white/95 rounded-lg shadow-lg p-6 w-full max-w-md relative">
             <button onClick={closeDetailModal} className="absolute top-2 right-2 text-gray-500 hover:text-red-500 text-xl">&times;</button>
             <div className="flex flex-col items-center mb-4">
-              {/* Foto profil user */}
               {detailUser.profileImage ? (
                 <img src={detailUser.profileImage} alt={detailUser.name} className="w-20 h-20 rounded-full object-cover border-4 border-green-400 mb-2" />
               ) : (
@@ -371,7 +324,6 @@ const AdminUserListPage = () => {
               {detailUser.store && (
                 <div className="mt-3 p-3 bg-green-50 rounded border border-green-200">
                   <div className="font-semibold text-green-700 mb-1">Data Toko</div>
-                  {/* Foto toko jika ada */}
                   {detailUser.store.photo && <img src={detailUser.store.photo} alt="Foto Toko" className="w-24 h-24 object-cover rounded mb-2" />}
                   <div><span className="font-semibold text-gray-700">Nama Toko:</span> {detailUser.store.name}</div>
                   <div><span className="font-semibold text-gray-700">Alamat Toko:</span> {detailUser.store.address}</div>
