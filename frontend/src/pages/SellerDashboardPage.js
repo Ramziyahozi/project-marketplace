@@ -9,6 +9,7 @@ const SellerDashboardPage = () => {
   const { user, isAuthenticated, logout, updateUser, setUser } = useAuthStore();
   const navigate = useNavigate();
   const [showAddModal, setShowAddModal] = useState(false);
+  // templete autofill
   const autofillTemplates = {
     'roti': {
       foodStatus: 'Layak konsumsi',
@@ -74,7 +75,7 @@ const SellerDashboardPage = () => {
   const [editError, setEditError] = useState('');
         const [orderLoading, setOrderLoading] = useState(false);
       const [orderError, setOrderError] = useState('');
-      const [activeTab, setActiveTab] = useState('dashboard');
+      const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard' | 'produk'
       
       // Cek pesanan baru
       useEffect(() => {
@@ -106,7 +107,7 @@ const SellerDashboardPage = () => {
     if (isAuthenticated && user?._id) {
       fetchUser();
     }
-  }, []);
+  }, [isAuthenticated, user._id]);
 
   const fetchAllData = async () => {
     setLoading(true);
