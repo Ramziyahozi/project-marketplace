@@ -129,14 +129,6 @@ const SellerDashboardPage = () => {
     }
   };
 
-  // Statistik
-  const totalProducts = products.length;
-  const totalOrders = orders.length;
-  const totalSales = orders
-    .filter(o => o.status === 'picked_up' || o.status === 'delivered')
-    .reduce((sum, o) => sum + ((o.productId?.discountPrice || o.productId?.price || 0) * o.quantity), 0);
-  // Pelanggan baru dihilangkan/dibuat 0
-
   // Hitung diskon otomatis
   function getDiscountPercent(expiredDate) {
     const now = new Date();
@@ -397,32 +389,6 @@ const SellerDashboardPage = () => {
         {activeTab === 'dashboard' && (
           <>
             <h1 className="text-base font-bold text-green-700 mb-2">Dashboard Penjual</h1>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-2 mb-4">
-              <div className="bg-white rounded-lg shadow p-2 flex flex-col items-center text-xs">
-                <div className="text-xl font-bold text-green-600 mb-1">Rp{totalSales.toLocaleString()}</div>
-                <div className="text-gray-600">Total Penjualan</div>
-              </div>
-              <div className="bg-white rounded-lg shadow p-2 flex flex-col items-center text-xs">
-                <div className="text-xl font-bold text-green-600 mb-1">{totalOrders}</div>
-                <div className="text-gray-600">Total Pesanan</div>
-              </div>
-              <div className="bg-white rounded-lg shadow p-2 flex flex-col items-center text-xs">
-                <div className="text-xl font-bold text-green-600 mb-1">{totalProducts}</div>
-                <div className="text-gray-600">Total Produk</div>
-              </div>
-            </div>
-
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-4">
-              <div className="bg-white rounded-lg shadow p-2 text-xs">
-                <div className="font-semibold text-gray-700 mb-1">Statistik Penjualan</div>
-                <div className="h-24 flex items-center justify-center text-gray-400">[Grafik Penjualan]</div>
-              </div>
-              <div className="bg-white rounded-lg shadow p-2 text-xs">
-                <div className="font-semibold text-gray-700 mb-1">Statistik Pesanan</div>
-                <div className="h-24 flex items-center justify-center text-gray-400">[Grafik Pesanan]</div>
-              </div>
-            </div>
           </>
         )}
         {activeTab === 'profilToko' && (
