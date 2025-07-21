@@ -6,10 +6,9 @@ import api from '../utils/axios';
 import ProductForm from '../components/ProductForm';
 
 const SellerDashboardPage = () => {
-  const { user, isAuthenticated, logout, updateUser } = useAuthStore();
+  const { user, isAuthenticated, logout, updateUser, setUser } = useAuthStore();
   const navigate = useNavigate();
   const [showAddModal, setShowAddModal] = useState(false);
-  // templete autofill
   const autofillTemplates = {
     'roti': {
       foodStatus: 'Layak konsumsi',
@@ -75,7 +74,7 @@ const SellerDashboardPage = () => {
   const [editError, setEditError] = useState('');
         const [orderLoading, setOrderLoading] = useState(false);
       const [orderError, setOrderError] = useState('');
-      const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard' | 'produk'
+      const [activeTab, setActiveTab] = useState('dashboard');
       
       // Cek pesanan baru
       useEffect(() => {
@@ -94,6 +93,20 @@ const SellerDashboardPage = () => {
     }
     fetchAllData();
   }, [isAuthenticated, user]);
+
+  // Fetch user terbaru dari backend saat dashboard dibuka
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const res = await api.get(`/users/${user._id}`);
+        setUser(res.data);
+      } catch (err) {
+      }
+    };
+    if (isAuthenticated && user?._id) {
+      fetchUser();
+    }
+  }, []);
 
   const fetchAllData = async () => {
     setLoading(true);
@@ -171,7 +184,6 @@ const SellerDashboardPage = () => {
       setNewProduct({ name: '', description: '', price: '', stock: '', expiredDate: '', category: '', image: null, foodStatus: '', storage: '', suggestion: '', halal: '' });
       setPreview('');
       fetchAllData();
-      // Notifikasi produk ditambahkan (dihapus karena fungsi tidak ada)
       console.log(`Produk "${newProduct.name}" berhasil ditambahkan ke toko Anda.`);
     } catch (err) {
       setAddError('Gagal menambah produk');
@@ -274,7 +286,7 @@ const SellerDashboardPage = () => {
     }
   };
 
-  // Ubah status pengiriman (khusus delivery)
+  // Ubah status pengiriman 
   const handleDeliveryStatusChange = async (orderId, newStatus) => {
     setOrderLoading(true);
     setOrderError('');
@@ -338,7 +350,6 @@ const SellerDashboardPage = () => {
 
   return (
     <div className="min-h-screen flex bg-gray-50">
-      {/* Sidebar */}
       <aside className="w-56 bg-white border-r flex flex-col py-4 px-2">
         <div className="mb-4 flex items-center gap-2">
           <span className="text-green-600 font-bold text-xl">Surplus</span>
@@ -351,7 +362,6 @@ const SellerDashboardPage = () => {
           >
             Dashboard
           </button>
-          {/* Hapus menu Produk */}
           <Link to="/store-profile" className="block py-1 px-2 rounded-lg hover:bg-green-50 text-xs">Profil Toko</Link>
           <button
             className="block py-1 px-2 rounded-lg hover:bg-yellow-50 text-yellow-700 font-semibold w-full text-left text-xs"
@@ -375,12 +385,11 @@ const SellerDashboardPage = () => {
         <button className="mt-4 py-1 px-2 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 text-xs" onClick={() => { logout(); navigate('/'); }}>Logout</button>
       </aside>
 
-      {/* Main Content */}
+
       <main className="flex-1 p-4">
         {activeTab === 'dashboard' && (
           <>
             <h1 className="text-base font-bold text-green-700 mb-2">Dashboard Penjual</h1>
-            {/* Statistik Ringkas */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-2 mb-4">
               <div className="bg-white rounded-lg shadow p-2 flex flex-col items-center text-xs">
                 <div className="text-xl font-bold text-green-600 mb-1">Rp{totalSales.toLocaleString()}</div>
@@ -394,10 +403,9 @@ const SellerDashboardPage = () => {
                 <div className="text-xl font-bold text-green-600 mb-1">{totalProducts}</div>
                 <div className="text-gray-600">Total Produk</div>
               </div>
-              {/* Hapus pelanggan baru */}
             </div>
 
-            {/* Grafik Placeholder */}
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-4">
               <div className="bg-white rounded-lg shadow p-2 text-xs">
                 <div className="font-semibold text-gray-700 mb-1">Statistik Penjualan</div>
@@ -536,7 +544,7 @@ const SellerDashboardPage = () => {
           </div>
         )}
 
-        {/* Modal Tambah Produk */}
+
         {showAddModal && (
           <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg shadow-lg p-3 w-full max-w-sm relative text-xs overflow-y-auto max-h-[80vh]">
@@ -615,7 +623,7 @@ const SellerDashboardPage = () => {
           </div>
         )}
 
-        {/* Modal Edit Produk */}
+
         {showEditModal && (
           <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
             <div className="bg-white rounded-xl shadow-lg p-8 max-w-lg w-full relative overflow-y-auto max-h-[80vh]">
