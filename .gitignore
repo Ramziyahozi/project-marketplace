@@ -1,0 +1,35 @@
+# Dependency
+node_modules/
+frontend/node_modules/
+backend/node_modules/
+
+# Build output
+dist/
+build/
+.next/
+.cache/
+.parcel-cache/
+
+# Env files
+.env
+.env.*
+backend/.env
+frontend/.env
+
+# Uploads/user files
+backend/uploads/
+
+# System files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Log/temp files
+*.log
+*.tmp
+*.bak
+
+# Lock files (optional, uncomment if you don't want to track lock files)
+# package-lock.json
+# yarn.lock 
