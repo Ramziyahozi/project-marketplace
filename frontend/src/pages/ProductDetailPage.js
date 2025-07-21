@@ -163,6 +163,10 @@ const ProductDetailPage = () => {
     halal: product.halal || '-',
   };
 
+  // Info toko
+  const namaToko = product.sellerId?.store?.name || product.sellerId?.name || '-';
+  const alamatToko = product.sellerId?.store?.address || product.sellerId?.address || '-';
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-green-100 text-gray-900">
       <div className="container mx-auto px-2 py-8 max-w-5xl">
@@ -270,25 +274,17 @@ const ProductDetailPage = () => {
                         <svg className="w-8 h-8 text-green-600 bg-green-100 rounded-full p-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7V6a2 2 0 012-2h14a2 2 0 012 2v1M3 7l1.553 9.32A2 2 0 006.53 18h10.94a2 2 0 001.977-1.68L21 7M3 7h18" /></svg>
                       )}
                       <span className="font-semibold text-green-800">Toko:</span>
-                      {product.sellerId?.name ? (
-                        <span
-                          className="text-green-600 font-bold text-base flex items-center gap-1"
-                        >
-                          {product.sellerId.name}
-                        </span>
-                      ) : (
-                        <span className="text-gray-700">-</span>
-                      )}
+                      {namaToko}
                     </div>
                     <div className="flex flex-col gap-1 mb-2">
                       <div className="flex items-center gap-2">
                         <svg className="w-5 h-5 text-blue-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 12.414a2 2 0 00-2.828 0l-4.243 4.243m6.364-6.364A4 4 0 1112 20a4 4 0 010-8z" /></svg>
                         <span className="font-semibold text-green-800">Alamat:</span>
-                        <span className="text-gray-700">{product.sellerId?.address || '-'}</span>
+                        {alamatToko}
                       </div>
-                      {product.sellerId?.address && (
+                      {alamatToko && (
                         <a
-                          href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(product.sellerId.address)}`}
+                          href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(alamatToko)}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-1 text-blue-600 hover:underline text-sm font-medium mt-1 ml-7"
