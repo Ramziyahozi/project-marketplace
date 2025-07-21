@@ -4,6 +4,7 @@ import useAuthStore from '../stores/authStore';
 import GoogleMapsPicker from '../components/GoogleMapsPicker';
 import api from '../utils/axios';
 import ProductForm from '../components/ProductForm';
+import StoreProfilePage from './StoreProfilePage';
 
 const SellerDashboardPage = () => {
   const { user, isAuthenticated, logout, updateUser, setUser } = useAuthStore();
@@ -75,7 +76,7 @@ const SellerDashboardPage = () => {
   const [editError, setEditError] = useState('');
         const [orderLoading, setOrderLoading] = useState(false);
       const [orderError, setOrderError] = useState('');
-      const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard' | 'produk'
+      const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard' | 'profilToko'
       
       // Cek pesanan baru
       useEffect(() => {
@@ -363,7 +364,12 @@ const SellerDashboardPage = () => {
           >
             Dashboard
           </button>
-          <Link to="/store-profile" className="block py-1 px-2 rounded-lg hover:bg-green-50 text-xs">Profil Toko</Link>
+          <button
+            className={`block py-1 px-2 rounded-lg text-xs w-full text-left font-semibold ${activeTab === 'profilToko' ? 'bg-green-100 text-green-700' : 'hover:bg-green-50 text-gray-700'}`}
+            onClick={() => setActiveTab('profilToko')}
+          >
+            Profil Toko
+          </button>
           <button
             className="block py-1 px-2 rounded-lg hover:bg-yellow-50 text-yellow-700 font-semibold w-full text-left text-xs"
             onClick={async () => {
@@ -418,6 +424,9 @@ const SellerDashboardPage = () => {
               </div>
             </div>
           </>
+        )}
+        {activeTab === 'profilToko' && (
+          <StoreProfilePage />
         )}
         {(activeTab === 'dashboard' || activeTab === 'produk') && (
           <div className="bg-white rounded-xl shadow-sm border-2 border-green-100 p-6 mb-6">
