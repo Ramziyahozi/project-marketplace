@@ -1,7 +1,7 @@
 const Product = require('../models/Product');
 const mongoose = require('mongoose');
 
-// GET /api/products?search=&minPrice=&maxPrice=&location=&category=&sellerId=&isAvailable=
+// GET products
 exports.getProducts = async (req, res) => {
   try {
     const {
@@ -48,11 +48,10 @@ exports.getProducts = async (req, res) => {
   }
 };
 
-// CREATE product (dengan upload foto)
+// CREATE product
 exports.createProduct = async (req, res) => {
   try {
     let { name, description, price, discountPrice, originalPrice, stock, expiredDate, pickupLocation, sellerId, isAvailable, category, foodStatus, storage, suggestion, checklist, halal } = req.body;
-    // Parse checklist jika string
     if (typeof checklist === 'string') {
       try { checklist = JSON.parse(checklist); } catch (e) { checklist = []; }
     }
@@ -89,10 +88,9 @@ exports.createProduct = async (req, res) => {
 // GET product by id
 exports.getProductById = async (req, res) => {
   try {
-    // Perbaiki populate agar field store ikut dikirim
     const product = await Product.findById(req.params.id)
       .populate('sellerId', 'name store')
-      .populate('reviews.user', 'name'); // Tambahkan populate ini
+      .populate('reviews.user', 'name'); 
     if (!product) return res.status(404).json({ error: 'Product not found' });
     res.json(product);
   } catch (err) {
@@ -100,18 +98,16 @@ exports.getProductById = async (req, res) => {
   }
 };
 
-// UPDATE product (bisa update foto)
+// UPDATE product 
 exports.updateProduct = async (req, res) => {
   try {
     let updateData = { ...req.body };
-    // Parse checklist jika string
     if (typeof updateData.checklist === 'string') {
       try { updateData.checklist = JSON.parse(updateData.checklist); } catch (e) { updateData.checklist = []; }
     }
     if (req.file && req.file.path) {
       updateData.imageUrl = req.file.path;
     }
-    // Pastikan field baru ikut di update
     if (req.body.foodStatus !== undefined) updateData.foodStatus = req.body.foodStatus;
     if (req.body.storage !== undefined) updateData.storage = req.body.storage;
     if (req.body.suggestion !== undefined) updateData.suggestion = req.body.suggestion;
@@ -136,7 +132,7 @@ exports.deleteProduct = async (req, res) => {
   }
 };
 
-// Tambah review ke produk
+//Add review
 exports.addReview = async (req, res) => {
   try {
     const { rating, comment, userId } = req.body;
@@ -145,10 +141,8 @@ exports.addReview = async (req, res) => {
     }
     const product = await Product.findById(req.params.id);
     if (!product) return res.status(404).json({ error: 'Product not found' });
-    // Tambahkan review baru
     product.reviews.unshift({ user: userId, rating, comment });
     await product.save();
-    // Populate nama user untuk review terbaru
     await product.populate({ path: 'reviews.user', select: 'name' });
     res.status(201).json(product.reviews[0]);
   } catch (err) {
