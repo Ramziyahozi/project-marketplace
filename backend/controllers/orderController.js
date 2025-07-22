@@ -4,7 +4,7 @@ const Product = require('../models/Product');
 const User = require('../models/User');
 const mongoose = require('mongoose');
 
-// CREATE order dengan validasi stok dan order detail
+// CREATE order 
 exports.createOrder = async (req, res) => {
   const session = await mongoose.startSession();
   session.startTransaction();
@@ -12,7 +12,7 @@ exports.createOrder = async (req, res) => {
   try {
     const { buyerId, productId, quantity, deliveryMethod, pickupTime, deliveryAddress, deliveryFee, notes, paymentMethod } = req.body;
 
-    // 1. Validasi produk dan stok
+    
     product = await Product.findById(productId).populate('sellerId', 'name').session(session);
     if (!product) {
       await session.abortTransaction();
@@ -28,11 +28,11 @@ exports.createOrder = async (req, res) => {
       });
     }
 
-    // 2. Kurangi stok produk
+
     product.stock -= quantity;
     await product.save({ session });
 
-    // 3. Buat order
+
     order = new Order({
       buyerId,
       productId,
@@ -44,11 +44,11 @@ exports.createOrder = async (req, res) => {
       deliveryFee,
       notes,
       paymentMethod,
-      status: 'pending' // Langsung pending, tidak perlu processing_payment
+      status: 'pending'
     });
     await order.save({ session });
 
-    // 4. Buat order detail
+
     orderDetail = new OrderDetail({
       orderId: order._id,
       productId: product._id,
@@ -63,11 +63,11 @@ exports.createOrder = async (req, res) => {
     });
     await orderDetail.save({ session });
 
-    // Commit transaction
+
     await session.commitTransaction();
     session.endSession();
 
-    // Response sederhana tanpa populate (untuk menghindari error)
+
     res.status(201).json({
       _id: order._id,
       buyerId: order.buyerId,
@@ -84,7 +84,6 @@ exports.createOrder = async (req, res) => {
     });
 
   } catch (err) {
-    // Hanya abort jika belum commit
     if (session.inTransaction()) {
       await session.abortTransaction();
     }
@@ -94,7 +93,7 @@ exports.createOrder = async (req, res) => {
   }
 };
 
-// GET all orders dengan order detail
+// GET orders
 exports.getOrders = async (req, res) => {
   try {
     const { buyerId, sellerId, status, deliveryMethod } = req.query;
@@ -111,7 +110,7 @@ exports.getOrders = async (req, res) => {
       .populate('sellerId', 'name')
       .sort({ createdAt: -1 });
 
-    // Ambil order detail untuk setiap order
+
     const ordersWithDetails = await Promise.all(
       orders.map(async (order) => {
         const orderDetails = await OrderDetail.find({ orderId: order._id });
@@ -129,7 +128,7 @@ exports.getOrders = async (req, res) => {
   }
 };
 
-// GET single order dengan detail
+
 exports.getOrder = async (req, res) => {
   try {
     const order = await Order.findById(req.params.id)
@@ -157,7 +156,6 @@ exports.getOrder = async (req, res) => {
 exports.updateOrderStatus = async (req, res) => {
   try {
     const { status } = req.body;
-    // Hanya izinkan status yang relevan
     const allowedStatus = ['pending', 'picked_up', 'cancelled', 'expired'];
     if (!allowedStatus.includes(status)) {
       return res.status(400).json({ error: 'Status tidak valid' });
@@ -181,7 +179,7 @@ exports.updateOrderStatus = async (req, res) => {
   }
 };
 
-// UPDATE delivery status
+
 exports.updateDeliveryStatus = async (req, res) => {
   try {
     const { deliveryStatus } = req.body;
@@ -208,7 +206,7 @@ exports.updateDeliveryStatus = async (req, res) => {
   }
 };
 
-// CANCEL order dan kembalikan stok
+//Cacel Order
 exports.cancelOrder = async (req, res) => {
   const session = await mongoose.startSession();
   session.startTransaction();
@@ -221,14 +219,14 @@ exports.cancelOrder = async (req, res) => {
       return res.status(404).json({ error: 'Order tidak ditemukan' });
     }
 
-    // Hanya bisa cancel jika status masih pending atau processing_payment
+
     if (!['pending', 'processing_payment'].includes(order.status)) {
       await session.abortTransaction();
       session.endSession();
       return res.status(400).json({ error: 'Order tidak dapat dibatalkan' });
     }
 
-    // Kembalikan stok
+
     const product = await Product.findById(order.productId).session(session);
     if (product) {
       product.stock += order.quantity;
@@ -249,7 +247,6 @@ exports.cancelOrder = async (req, res) => {
     });
 
   } catch (err) {
-    // Hanya abort jika belum commit
     if (session.inTransaction()) {
       await session.abortTransaction();
     }
@@ -259,7 +256,7 @@ exports.cancelOrder = async (req, res) => {
   }
 };
 
-// GET order statistics
+
 exports.getOrderStats = async (req, res) => {
   try {
     const { sellerId } = req.query;
@@ -284,7 +281,6 @@ exports.getOrderStats = async (req, res) => {
   }
 }; 
 
-// Hapus order by id
 exports.deleteOrder = async (req, res) => {
   try {
     const order = await Order.findByIdAndDelete(req.params.id);
