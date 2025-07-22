@@ -1,6 +1,6 @@
 const User = require('../models/User');
 
-// GET /api/sellers?search=&location=&category=
+// GET sellers
 exports.getSellers = async (req, res) => {
   try {
     const { search, location, category } = req.query;
@@ -32,7 +32,7 @@ exports.createUser = async (req, res) => {
   }
 };
 
-// GET all users (atau filter by email)
+// GET users 
 exports.getUsers = async (req, res) => {
   try {
     const { email } = req.query;
@@ -45,7 +45,7 @@ exports.getUsers = async (req, res) => {
   }
 };
 
-// GET user by id
+
 exports.getUserById = async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
@@ -62,10 +62,8 @@ exports.updateUser = async (req, res) => {
     const user = await User.findById(req.params.id);
     if (!user) return res.status(404).json({ error: 'User not found' });
 
-    // Update field user
     Object.assign(user, req.body);
 
-    // Jika ada field store, merge dengan data lama
     if (req.body.store) {
       user.store = { ...user.store, ...req.body.store };
     }
