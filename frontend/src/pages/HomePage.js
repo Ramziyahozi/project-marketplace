@@ -8,14 +8,14 @@ const HomePage = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { user, isAuthenticated } = useAuthStore();
-  const { addItem } = useCartStore();  
+  const { addItem } = useCartStore();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || '');
   const [isVisible, setIsVisible] = useState(false);
   const [viewMode, setViewMode] = useState('grid'); // grid or list
-  
+
 
 
   // Categories
@@ -33,7 +33,7 @@ const HomePage = () => {
         // Ambil produk dari backend
         const res = await api.get('/products');
         let allProducts = res.data;
-        
+
         // Filter search
         if (searchQuery) {
           const searchLower = searchQuery.toLowerCase();
@@ -75,8 +75,17 @@ const HomePage = () => {
   };
 
   const handleAddToCart = (product) => {
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
+    // Cek jika user adalah seller dari produk ini
+    if (user && product && product.sellerId && user._id === (product.sellerId._id || product.sellerId)) {
+      alert('Anda tidak bisa membeli produk milik toko Anda sendiri!');
+      return;
+    }
     addItem(product);
-    // Produk berhasil ditambahkan ke keranjang
+    alert(`${product.name} ditambahkan ke keranjang!`);
   };
 
   const getDiscountPercentage = (product) => {
@@ -85,6 +94,12 @@ const HomePage = () => {
 
   const formatDistance = (distance) => {
     return distance;
+  };
+
+  const getAverageRating = (product) => {
+    if (!product.reviews || product.reviews.length === 0) return 0;
+    const total = product.reviews.reduce((sum, review) => sum + review.rating, 0);
+    return (total / product.reviews.length).toFixed(1);
   };
 
   return (
@@ -110,17 +125,16 @@ const HomePage = () => {
                   </div>
                 </div>
               </form>
-                  </div>
+            </div>
 
 
 
-            
+
             <div className="flex items-center gap-2 ml-4">
               <button
                 onClick={() => setViewMode('grid')}
-                className={`p-2 rounded-lg transition-all duration-300 ${
-                  viewMode === 'grid' ? 'bg-green-100 text-green-600' : 'text-gray-400 hover:text-gray-600'
-                }`}
+                className={`p-2 rounded-lg transition-all duration-300 ${viewMode === 'grid' ? 'bg-green-100 text-green-600' : 'text-gray-400 hover:text-gray-600'
+                  }`}
               >
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
@@ -128,28 +142,26 @@ const HomePage = () => {
               </button>
               <button
                 onClick={() => setViewMode('list')}
-                className={`p-2 rounded-lg transition-all duration-300 ${
-                  viewMode === 'list' ? 'bg-green-100 text-green-600' : 'text-gray-400 hover:text-gray-600'
-                }`}
+                className={`p-2 rounded-lg transition-all duration-300 ${viewMode === 'list' ? 'bg-green-100 text-green-600' : 'text-gray-400 hover:text-gray-600'
+                  }`}
               >
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
                 </svg>
-                  </button>
-                </div>
+              </button>
+            </div>
           </div>
 
-          
+
           <div className="flex items-center gap-4 mt-4 overflow-x-auto pb-2">
             {categories.map((category) => (
               <button
-                key={category.id} 
+                key={category.id}
                 onClick={() => handleCategoryClick(category.id)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-full whitespace-nowrap transition-all duration-300 ${
-                  selectedCategory === category.id
-                    ? 'bg-green-500 text-white shadow-lg'
-                    : 'bg-white border border-gray-200 text-gray-700 hover:border-green-300 hover:shadow-md'
-                }`}
+                className={`flex items-center gap-2 px-4 py-2 rounded-full whitespace-nowrap transition-all duration-300 ${selectedCategory === category.id
+                  ? 'bg-green-500 text-white shadow-lg'
+                  : 'bg-white border border-gray-200 text-gray-700 hover:border-green-300 hover:shadow-md'
+                  }`}
               >
                 <span className="text-lg">{category.icon}</span>
                 <span className="text-sm font-medium">{category.name}</span>
@@ -161,7 +173,7 @@ const HomePage = () => {
 
 
 
-      
+
       <div className="container mx-auto px-6 py-8">
         <div className="flex items-center justify-between mb-8">
           <div>
@@ -175,7 +187,7 @@ const HomePage = () => {
 
         </div>
 
-        
+
         {loading ? (
           <div className="flex justify-center items-center h-64">
             <div className="relative">
@@ -193,34 +205,31 @@ const HomePage = () => {
             {products.map((product, index) => (
               <div
                 key={product._id}
-                className={`group bg-white rounded-2xl shadow-sm border-2 border-green-100 overflow-hidden hover:shadow-xl transition-all duration-300 ${
-                  isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
-                }`}
+                className={`group bg-white rounded-2xl shadow-sm border-2 border-green-100 overflow-hidden hover:shadow-xl transition-all duration-300 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
+                  }`}
                 style={{ transitionDelay: `${index * 100}ms` }}
               >
-                
+
                 <div className="relative">
                   <Link to={`/products/${product._id}`}>
                     <img
                       src={product.imageUrl}
                       alt={product.name}
-                      className={`w-full object-cover transition-transform duration-300 group-hover:scale-105 ${
-                        viewMode === 'grid' ? 'h-48' : 'h-32'
-                      }`}
+                      className={`w-full object-cover transition-transform duration-300 group-hover:scale-105 ${viewMode === 'grid' ? 'h-48' : 'h-32'
+                        }`}
                     />
                   </Link>
-                  
-                  
+
+
                   {product.discountPrice && (
                     <div className="absolute top-3 left-3 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
                       -{getDiscountPercentage(product)}%
                     </div>
                   )}
-                  
-                  {/* Distance Badge */}
-                  {/* Hapus Distance Badge dari card produk */}
-                  
-                  {/* Quick Add Button */}
+
+
+
+                  {/* button add*/}
                   <button
                     onClick={() => handleAddToCart(product)}
                     className="absolute bottom-3 right-3 w-10 h-10 bg-white rounded-full shadow-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110"
@@ -231,7 +240,7 @@ const HomePage = () => {
                   </button>
                 </div>
 
-                {/* Product Info */}
+                {/* info produk */}
                 <div className="p-4">
                   <div className="flex items-start justify-between mb-2">
                     <Link to={`/products/${product._id}`} className="flex-1">
@@ -241,7 +250,7 @@ const HomePage = () => {
                     </Link>
                   </div>
 
-                  {/* Seller Info */}
+                  {/* info penjual */}
                   <div className="flex items-center gap-2 mb-3">
                     <div className="w-4 h-4 bg-green-500 rounded-full"></div>
                     <span className="text-sm text-gray-600">{product.sellerId?.name || 'Toko'}</span>
@@ -253,12 +262,12 @@ const HomePage = () => {
                       <svg className="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
                         <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                       </svg>
-                      <span className="text-sm text-gray-600 ml-1">{product.rating}</span>
+                      <span className="text-sm text-gray-600 ml-1">{getAverageRating(product)}</span>
                     </div>
-                    <span className="text-sm text-gray-500">({product.reviewCount})</span>
+                    <span className="text-sm text-gray-500">({product.reviews?.length || 0})</span>
                   </div>
 
-                  {/* Price */}
+                  {/* harga */}
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span className="text-lg font-bold text-green-600">
@@ -270,8 +279,8 @@ const HomePage = () => {
                         </span>
                       )}
                     </div>
-                    
-                    {/* Stock Info */}
+
+                    {/* info stock */}
                     <div className={`text-xs ${product.stock > 0 ? 'text-green-600' : 'text-red-600'} font-medium`}>
                       {product.stock > 0 ? `Stok: ${product.stock}` : 'Habis'}
                     </div>
@@ -283,7 +292,7 @@ const HomePage = () => {
         )}
 
 
-        </div>
+      </div>
     </div>
   );
 };
