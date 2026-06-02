@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import useAuthStore from '../stores/authStore';
 import useCartStore from '../stores/cartStore';
 import api from '../utils/axios';
+import { isProductExpired, isProductExpiringSoon, getExpiredStatus, getDaysUntilExpired } from '../utils/productUtils';
 
 
 const ProductDetailPage = () => {
@@ -10,7 +11,7 @@ const ProductDetailPage = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuthStore();
   const { addItem } = useCartStore();
-  
+
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -40,6 +41,12 @@ const ProductDetailPage = () => {
   }, []);
 
   const handleAddToCart = () => {
+    // Cek apakah produk sudah expired
+    if (isProductExpired(product.expiredDate)) {
+      alert('Maaf, produk ini sudah kedaluwarsa dan tidak bisa ditambahkan ke keranjang!');
+      return;
+    }
+
     if (!isAuthenticated) {
       navigate('/login');
       return;
@@ -58,6 +65,12 @@ const ProductDetailPage = () => {
   };
 
   const handleBuyNow = () => {
+    // Cek apakah produk sudah expired
+    if (isProductExpired(product.expiredDate)) {
+      alert('Maaf, produk ini sudah kedaluwarsa dan tidak bisa dibeli!');
+      return;
+    }
+
     if (!isAuthenticated) {
       navigate('/login');
       return;
@@ -166,6 +179,11 @@ const ProductDetailPage = () => {
   // Info toko
   const namaToko = product.sellerId?.store?.name || product.sellerId?.name || '-';
   const alamatToko = product.sellerId?.store?.address || product.sellerId?.address || '-';
+  
+  // Cek status expired
+  const expired = isProductExpired(product.expiredDate);
+  const expiringSoon = !expired && isProductExpiringSoon(product.expiredDate);
+  const daysLeft = getDaysUntilExpired(product.expiredDate);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-green-100 text-gray-900">
@@ -173,9 +191,9 @@ const ProductDetailPage = () => {
         <div className="flex flex-col md:flex-row gap-6 md:gap-10 mb-6 md:items-start animate-fade-in">
           <div className="flex-1 flex flex-col items-center md:items-start">
             <div className="relative w-full max-w-lg rounded-3xl overflow-hidden shadow-2xl border-4 border-green-100 bg-white group">
-              <img 
-                src={mainImage} 
-                alt={product.name} 
+              <img
+                src={mainImage}
+                alt={product.name}
                 className="w-full h-[340px] object-cover object-center transition-transform duration-500 group-hover:scale-105"
                 style={{ aspectRatio: '1/1' }}
               />
@@ -184,8 +202,25 @@ const ProductDetailPage = () => {
                   -{getDiscountPercentage()}%
                 </span>
               )}
-              <span className="absolute top-4 right-4 bg-green-100 text-green-700 text-xs font-bold px-4 py-1 rounded-full shadow">
-                {product.category?.replace('-', ' ').toUpperCase() || 'PRODUK'}
+              {expired ? (
+                <span className="absolute top-4 left-4 bg-red-600 text-white text-lg font-bold px-5 py-2 rounded-full shadow-lg flex items-center gap-2 animate-pulse">
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  </svg>
+                  Kedaluwarsa
+                </span>
+              ) : expiringSoon ? (
+                <span className="absolute top-4 left-4 bg-orange-500 text-white text-lg font-bold px-5 py-2 rounded-full shadow-lg flex items-center gap-2 animate-pulse">
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M18.868 14.545c.111.717-.652 1.312-1.364 1.087-.329-.101-.604-.208-.83-.322-.223.114-.501.221-.83.322-.712.225-1.475-.37-1.364-1.087.051-.325.233-.713.675-1.304-.072-.072-.15-.14-.23-.205a.866.866 0 00-.21-.14c-.625-.305-1.153-.59-1.153-1.254 0-.742.737-1.344 1.647-1.344.908 0 1.647.602 1.647 1.344 0 .663-.528.95-1.153 1.254-.072.035-.145.087-.21.14-.08.065-.157.133-.23.205.442.591.624.979.675 1.304zM10 20a10 10 0 100-20 10 10 0 000 20z" clipRule="evenodd" />
+                  </svg>
+                  Segera Habis ({daysLeft} hari)
+                </span>
+              ) : null}
+              <span className={`absolute top-4 right-4 text-xs font-bold px-4 py-1 rounded-full shadow ${
+                expired ? 'bg-red-100 text-red-700' : expiringSoon ? 'bg-orange-100 text-orange-700' : 'bg-green-100 text-green-700'
+              }`}>
+                {expired ? 'KEDALUWARSA' : expiringSoon ? 'SEGERA HABIS' : (product.category?.replace('-', ' ').toUpperCase() || 'PRODUK')}
               </span>
             </div>
             {product.images && product.images.length > 1 && (
@@ -203,11 +238,11 @@ const ProductDetailPage = () => {
             )}
             <div className="w-full mt-4 animate-fade-in">
               <div className="bg-white rounded-3xl shadow-2xl border-2 border-green-100 p-6 flex flex-col gap-4">
-                                <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
                     <label className="text-gray-700 font-semibold text-sm">Jumlah:</label>
                     <div className="flex items-center gap-2">
-                      <button 
+                      <button
                         onClick={() => setQuantity(Math.max(1, quantity - 1))}
                         className="w-8 h-8 bg-white border border-green-200 rounded-lg flex items-center justify-center hover:bg-green-50 transition-colors duration-300 shadow"
                       >
@@ -216,14 +251,13 @@ const ProductDetailPage = () => {
                         </svg>
                       </button>
                       <span className="text-lg font-bold text-gray-900 min-w-[2rem] text-center">{quantity}</span>
-                      <button 
+                      <button
                         onClick={() => setQuantity(Math.min(product.stock || 0, quantity + 1))}
                         disabled={quantity >= (product.stock || 0)}
-                        className={`w-8 h-8 border rounded-lg flex items-center justify-center transition-colors duration-300 shadow ${
-                          quantity >= (product.stock || 0) 
-                            ? 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed' 
+                        className={`w-8 h-8 border rounded-lg flex items-center justify-center transition-colors duration-300 shadow ${quantity >= (product.stock || 0)
+                            ? 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed'
                             : 'bg-white border-green-200 hover:bg-green-50 text-green-700'
-                        }`}
+                          }`}
                       >
                         <svg className="w-4 h-4 text-green-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -237,21 +271,33 @@ const ProductDetailPage = () => {
                 </div>
                 <button
                   onClick={handleAddToCart}
-                  className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold py-3 px-4 rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-green-500/25 flex items-center justify-center gap-2 text-sm shadow-lg"
+                  disabled={expired}
+                  className={`w-full font-bold py-3 px-4 rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-2xl flex items-center justify-center gap-2 text-sm shadow-lg ${
+                    expired
+                      ? 'bg-gray-400 text-gray-600 cursor-not-allowed opacity-50'
+                      : 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white hover:shadow-green-500/25'
+                  }`}
+                  title={expired ? 'Produk sudah kedaluwarsa' : 'Tambah ke keranjang'}
                 >
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                   </svg>
-                  Tambah ke Keranjang
+                  {expired ? 'Produk Kedaluwarsa' : 'Tambah ke Keranjang'}
                 </button>
                 <button
                   onClick={handleBuyNow}
-                  className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold py-3 px-4 rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/25 flex items-center justify-center gap-2 text-sm shadow-lg"
+                  disabled={expired}
+                  className={`w-full font-bold py-3 px-4 rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-2xl flex items-center justify-center gap-2 text-sm shadow-lg ${
+                    expired
+                      ? 'bg-gray-400 text-gray-600 cursor-not-allowed opacity-50'
+                      : 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white hover:shadow-blue-500/25'
+                  }`}
+                  title={expired ? 'Produk sudah kedaluwarsa' : 'Beli sekarang'}
                 >
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                   </svg>
-                  Beli Sekarang
+                  {expired ? 'Tidak Bisa Dibeli' : 'Beli Sekarang'}
                 </button>
               </div>
             </div>
@@ -311,7 +357,7 @@ const ProductDetailPage = () => {
                   </h1>
                   <div className="flex items-center gap-3 mb-2">
                     <div className="flex items-center">
-                      {[1,2,3,4,5].map((star) => (
+                      {[1, 2, 3, 4, 5].map((star) => (
                         <svg
                           key={star}
                           className={`w-5 h-5 ${star <= Math.round(getAverageRating()) ? 'text-yellow-400' : 'text-gray-300'}`}
@@ -327,7 +373,15 @@ const ProductDetailPage = () => {
                   </div>
                   <div className="flex flex-wrap gap-2 mb-2">
                     <span className="inline-block bg-green-50 text-green-700 px-3 py-1 rounded-full text-xs font-semibold border border-green-200">Stok: {product.stock}</span>
-                    <span className="inline-block bg-yellow-50 text-yellow-700 px-3 py-1 rounded-full text-xs font-semibold border border-yellow-200">Expired: {formatDate(product.expiredDate)}</span>
+                    <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold border ${
+                      expired
+                        ? 'bg-red-100 text-red-700 border-red-200'
+                        : expiringSoon
+                        ? 'bg-orange-100 text-orange-700 border-orange-200'
+                        : 'bg-yellow-50 text-yellow-700 border-yellow-200'
+                    }`}>
+                      {expired ? '🚫 KEDALUWARSA' : expiringSoon ? `⏰ Kedaluwarsa ${daysLeft} hari lagi` : `📅 Kedaluwarsa: ${formatDate(product.expiredDate)}`}
+                    </span>
                   </div>
                 </div>
                 <div className="flex flex-col items-end">
@@ -366,6 +420,35 @@ const ProductDetailPage = () => {
                   <div className="text-gray-700 text-sm">{infoProduk.suggestion}</div>
                 </div>
               </div>
+
+              {/* Alert untuk produk expired atau segera expired */}
+              {expired && (
+                <div className="mt-6 p-4 bg-red-100 border-2 border-red-400 rounded-lg flex items-start gap-3">
+                  <svg className="w-6 h-6 text-red-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  </svg>
+                  <div>
+                    <h4 className="text-red-800 font-bold">Produk Kedaluwarsa</h4>
+                    <p className="text-red-700 text-sm mt-1">
+                      {getExpiredStatus(product.expiredDate)}. Produk ini tidak bisa ditambahkan ke keranjang atau dibeli untuk keamanan konsumsi Anda.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {expiringSoon && !expired && (
+                <div className="mt-6 p-4 bg-orange-100 border-2 border-orange-400 rounded-lg flex items-start gap-3">
+                  <svg className="w-6 h-6 text-orange-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M18.868 14.545c.111.717-.652 1.312-1.364 1.087-.329-.101-.604-.208-.83-.322-.223.114-.501.221-.83.322-.712.225-1.475-.37-1.364-1.087.051-.325.233-.713.675-1.304-.072-.072-.15-.14-.23-.205a.866.866 0 00-.21-.14c-.625-.305-1.153-.59-1.153-1.254 0-.742.737-1.344 1.647-1.344.908 0 1.647.602 1.647 1.344 0 .663-.528.95-1.153 1.254-.072.035-.145.087-.21.14-.08.065-.157.133-.23.205.442.591.624.979.675 1.304zM10 20a10 10 0 100-20 10 10 0 000 20z" clipRule="evenodd" />
+                  </svg>
+                  <div>
+                    <h4 className="text-orange-800 font-bold">Perhatian: Produk Segera Kedaluwarsa</h4>
+                    <p className="text-orange-700 text-sm mt-1">
+                      Produk ini hanya tersisa {daysLeft} hari sebelum kedaluwarsa ({formatDate(product.expiredDate)}). Segera konsumsi setelah pembelian untuk mendapatkan kualitas terbaik.
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
             <div className="w-full mt-4 animate-fade-in">
               <div className="relative flex flex-col md:flex-row items-center gap-6 p-6 rounded-3xl shadow-2xl border-2 border-green-200 bg-gradient-to-br from-green-50 via-white to-yellow-50 overflow-hidden">
@@ -405,7 +488,7 @@ const ProductDetailPage = () => {
             <form onSubmit={handleReviewSubmit} className="mb-10 bg-green-100/70 rounded-2xl p-6 flex flex-col md:flex-row gap-4 items-center border border-green-200 shadow">
               <div className="flex items-center gap-2">
                 <span className="text-green-700 font-semibold">Rating:</span>
-                {[1,2,3,4,5].map((star) => (
+                {[1, 2, 3, 4, 5].map((star) => (
                   <button
                     key={star}
                     type="button"
